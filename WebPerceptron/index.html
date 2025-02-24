@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Perceptron - L or T</title>
+    <meta charset="utf-8" />
+    <!--   <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />    -->
+    <!--     <script defer src="https://pyscript.net/latest/pyscript.js"></script>     -->
+    <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
+    <!-- CSS for examples -->
+    <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
+    <style>
+        body{
+            background-color: #4A6670;
+            color: #313638;
+            font-family: 'Palatino';
+        }
+        h1{
+            color: #8EA604;
+            margin-left: 5%;
+        }
+        #container
+        {
+            display: flex;
+        }
+        #grid{
+            display: grid;
+            width: 30%;
+            grid-template-columns: auto auto auto auto;
+            justify-content: center;
+            gap: 0;
+            box-sizing: border-box;
+        }
+        #grid > div{
+            background-color: #E8F1F2;
+            border: 1px solid #313638;
+            padding: 35px;
+            font-size: 30px;
+            text-align: center;
+        }
+        label{
+            display: block;
+        }
+        button{
+            color: #000500;
+            justify-self: end;
+            grid-column: span 4;
+            margin-top: 5%;
+            background-color: #9E6240;
+            /*border-radius: 4px;*/
+            padding: 2%;
+        }
+        #output{
+            width: 70%;
+        }
+        #results{
+            color: #8EA604;
+            font-size: 50px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<h1>Perceptron - L or T</h1>
+<!--4x4 Grid representing whether an LED is on or off-->
+<div id="container">
+<div id="grid" border=15px>
+<div><input type="checkbox" id="input1"><label for="input1">1</label></div>
+<div><input type="checkbox" id="input2"><label for="input2">2</label></div>
+<div><input type="checkbox" id="input3"><label for="input3">3</label></div>
+<div><input type="checkbox" id="input4"><label for="input4">4</label></div>
+<div><input type="checkbox" id="input5"><label for="input5">5</label></div>
+<div><input type="checkbox" id="input6"><label for="input6">6</label></div>
+<div><input type="checkbox" id="input7"><label for="input7">7</label></div>
+<div><input type="checkbox" id="input8"><label for="input8">8</label></div>
+<div><input type="checkbox" id="input9"><label for="input9">9</label></div>
+<div><input type="checkbox" id="input10"><label for="input10">10</label></div>
+<div><input type="checkbox" id="input11"><label for="input11">11</label></div>
+<div><input type="checkbox" id="input12"><label for="input12">12</label></div>
+<div><input type="checkbox" id="input13"><label for="input13">13</label></div>
+<div><input type="checkbox" id="input14"><label for="input14">14</label></div>
+<div><input type="checkbox" id="input15"><label for="input15">15</label></div>
+<div><input type="checkbox" id="input16"><label for="input16">16</label></div>
+<button id="get-entries" py-click="my_gen_function">Predict</button>
+</div>
+<div id="output">
+<div id="results">
+</div>
+</div>
+</div>
+<script type="py" config="pyscript.toml">
+    import numpy as np
+    import pandas as pd
+    import matplotlib.pyplot as plt
+    import matplotlib.tri as tri
+    from pyodide.http import open_url
+    from pyscript import display
+    from pyweb import pydom
+    from pyscript import document
+    weights = np.array([ 0.  ,  0.02,  0.04,  0.02, -0.02,  0.  ,  0.02,  0.  , -0.02,
+    0.  ,  0.02,  0.  , -0.02, -0.02, -0.02, -0.02])
+    bias = 0
+    def get_values_vector():
+        c1 = 1 if document.querySelector("#input1").checked else 0
+        c2 = 1 if document.querySelector("#input2").checked else 0
+        c3 = 1 if document.querySelector("#input3").checked else 0
+        c4 = 1 if document.querySelector("#input4").checked else 0
+        c5 = 1 if document.querySelector("#input5").checked else 0
+        c6 = 1 if document.querySelector("#input6").checked else 0
+        c7 = 1 if document.querySelector("#input7").checked else 0
+        c8 = 1 if document.querySelector("#input8").checked else 0
+        c9 = 1 if document.querySelector("#input9").checked else 0
+        c10 = 1 if document.querySelector("#input10").checked else 0
+        c11 = 1 if document.querySelector("#input11").checked else 0
+        c12 = 1 if document.querySelector("#input12").checked else 0
+        c13 = 1 if document.querySelector("#input13").checked else 0
+        c14 = 1 if document.querySelector("#input14").checked else 0
+        c15 = 1 if document.querySelector("#input15").checked else 0
+        c16 = 1 if document.querySelector("#input16").checked else 0
+
+        list = [c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15, c16]
+        np_list = np.array(list)
+
+        return np_list
+    
+    def activation(z):
+        return np.where( z>=0, 1, -1)
+
+    def predict(X_test, weights, bias):
+        linear_product = np.dot(X_test, weights) + bias
+        y_pred = activation(linear_product)
+        return y_pred
+    def my_gen_function(event):
+        pydom["div#results"].html = "Loading..."
+        X_test = get_values_vector()
+        prediction = predict(X_test, weights, bias)
+        result_text = "L" if prediction == -1 else "T"
+        result =  "Prediction: " + result_text
+        pydom["div#results"].html = result
+
+</script>
+</body>
+</html>
