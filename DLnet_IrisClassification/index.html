@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Iris Flower Classifier</title>
+  <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>
+  <link rel="stylesheet" href="/styles.css"></link>
+</head>
+<body>
+<div class="header">
+  <div class="titles">
+    <h1>Iris Flower Classifier</h1>
+    <h2>Andrea Salgado &amp; Claudia Pletka</h2>
+  </div>
+  <img src="iris.png" alt="Iris">
+</div>
+  <form>
+    <label>Sepal Length (cm)
+      <input type="number" id="sepal_length" placeholder="4.3 – 7.9" required>
+    </label>
+    <label>Sepal Width (cm)
+      <input type="number" id="sepal_width" placeholder="2.0 – 4.4" required>
+    </label>
+    <label>Petal Length (cm)
+      <input type="number" id="petal_length" placeholder="1.0 – 6.9" required>
+    </label>
+    <label>Petal Width (cm)
+      <input type="number" id="petal_width" placeholder="0.1 – 2.5" required>
+    </label>
+    <button type="button" id="classify-btn">Classify</button>
+    <span id="status-output">Loading model…</span>
+  </form>
+  <div id="model-output">
+    <h3></h3>
+  </div>
+  <script>
+    function softmax(logits) {
+      const m = Math.max(...logits)
+      const exps = logits.map(l => Math.exp(l - m))
+      const sum = exps.reduce((a,b) => a + b, 0)
+      return exps.map(e => e / sum)
+    }
+    const statusOutput = document.getElementById('status-output')
+    const outputDiv = document.getElementById('model-output')
+    const btn = document.getElementById('classify-btn')
+    const classNames = ['setosa','virginica','versicolor']
+    let session
+    ;(async () => {
+      try {
+        session = await ort.InferenceSession.create('./DLnet_IrisData.onnx')
+        statusOutput.textContent = ''
+      } catch (e) {
+        statusOutput.textContent = 'Failed to load model.'
+        console.error(e)
+      }
+    })()
+    btn.addEventListener('click', async () => {
+      if (!session) return
+      statusOutput.textContent = 'Running…'
+      const raw = [
+        parseFloat(document.getElementById('sepal_length').value),
+        parseFloat(document.getElementById('sepal_width').value),
+        parseFloat(document.getElementById('petal_length').value),
+        parseFloat(document.getElementById('petal_width').value)
+      ]
+      const tensor = new ort.Tensor('float32', Float32Array.from(raw), [1,4])
+      const results = await session.run({ [session.inputNames[0]]: tensor })
+      const scores = Array.from(results[session.outputNames[0]].data)
+      const probs = softmax(scores)
+      const i = probs.indexOf(Math.max(...probs))
+      const predictedClass = classNames[i]
+      const confidences = classNames.map((c,j) => ({ name: c, prob: probs[j] }))
+      confidences.sort((a,b) => b.prob - a.prob)
+      const confidenceListHTML = confidences
+        .map(item => `<li>${item.name}: ${(item.prob*100).toFixed(1)}%</li>`)
+        .join('')
+      outputDiv.innerHTML = `
+        <hr/>
+        <h3>Prediction:</h3>
+        <p><strong>${predictedClass}</strong> (class ${i})</p>
+        <h4>Confidence by class:</h4>
+        <ul>
+          ${confidenceListHTML}
+        </ul>
+      `
+      statusOutput.textContent = ''
+    })
+  </script>
+</body>
+</html>
